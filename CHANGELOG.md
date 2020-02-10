@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2020-02-09
+### Added
+- Method to hash two files and return boolean if same/differ.
+- `main` method for calls from the CLI.
+
+### Changed
+- If a destination file exists and the hash of the source and destination files differ then skip it. If the
+  hash is the same, then proceed (currently copy is called, but later it will be move so this will eliminate
+  the source file). 
+
 ## [0.2.0] - 2020-02-09
 ### Added
 - `move_file` to carry out the copying of the image file. Currently this does not move, only copies.

@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime
 from pathlib import PosixPath
 
-from sort import get_date_from_filename, search_directory, is_file, move_file, sort_images
+from sort import get_date_from_filename, search_directory, is_file, move_file, sort_images, diff_files
 
 
 class TestGetDateFromFile:
@@ -71,6 +71,14 @@ class TestSearchDirectory:
                           PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4')]
 
 
+class TestDiffFiles:
+    def test_same_hash(self):
+        assert diff_files('sample-images/metadata.jpg', 'sample-images/metadata-copy.jpg') is True
+
+    def test_different_hash(self):
+        assert diff_files('sample-images/metadata.jpg', 'sample-images/no-metadata.jpg') is False
+
+
 class TestMoveFile:
     def test_move_file(self, tmp_path):
         src = tmp_path / 'src'
@@ -81,8 +89,39 @@ class TestMoveFile:
         dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
 
         assert not dest_file.exists()
+        assert move_file(src_file, dest_file) is True
+        assert dest_file.exists()
+
+    def test_file_exists_same_hash(self, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
+
+        assert not dest_file.exists()
         move_file(src_file, dest_file)
         assert dest_file.exists()
+
+        assert move_file(src_file, dest_file) is True
+
+    def test_file_exists_different_hash(self, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
+
+        assert not dest_file.exists()
+        move_file(src_file, dest_file)
+        assert dest_file.exists()
+
+        src_file = src / 'no-metadata.jpg'
+        shutil.copy2('sample-images/no-metadata.jpg', src_file)
+
+        assert move_file(src_file, dest_file) is False
 
 
 class TestSortImages:
