@@ -1,8 +1,9 @@
 """Tests for sort.py."""
+import shutil
 from datetime import datetime
 from pathlib import PosixPath
 
-from sort import get_date_from_filename, search_directory, is_file
+from sort import get_date_from_filename, search_directory, is_file, move_file, sort_images
 
 
 class TestGetDateFromFile:
@@ -68,3 +69,60 @@ class TestSearchDirectory:
                           PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
                           PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
                           PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4')]
+
+
+class TestMoveFile:
+    def test_move_file(self, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
+
+        assert not dest_file.exists()
+        move_file(src_file, dest_file)
+        assert dest_file.exists()
+
+
+class TestSortImages:
+    def test_successful_run(self, tmp_path):
+        src = tmp_path / 'src'
+        dest = tmp_path / 'dest'
+
+        if src.exists():
+            shutil.rmtree(src)
+        if dest.exists():
+            shutil.rmtree(dest)
+
+        shutil.copytree('sample-images', src, symlinks=True)
+
+        sort_images(src, dest)
+
+        result = search_directory(dest)
+        result = [p.relative_to(tmp_path) for p in result]
+
+        assert result == [PosixPath('dest/2018-07'), PosixPath('dest/2017-11'), PosixPath('dest/2017-10'),
+                          PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
+                          PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
+                          PosixPath('dest/2017-10/IMG_20171007_143321.png'),
+                          PosixPath('dest/2017-10/IMG_20171022_124203.jpg')]
+
+    def test_unknown_suffix(self, tmp_path):
+        src = tmp_path / 'src'
+        dest = tmp_path / 'dest'
+
+        if src.exists():
+            shutil.rmtree(src)
+        if dest.exists():
+            shutil.rmtree(dest)
+
+        src.mkdir(parents=True, exist_ok=True)
+
+        bad_suffix = src / 'IMG_20170102_030405.UNKNOWN_FOOBAR'
+        bad_suffix.touch()
+
+        sort_images(src, dest)
+        result = search_directory(dest)
+
+        assert result == list()

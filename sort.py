@@ -1,4 +1,5 @@
 """Sort photos from the source directory into the destination directory."""
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -48,3 +49,46 @@ def is_file(file_path):
         return False
     else:
         return False
+
+
+def move_file(src_file, dest_file):
+    """Move a file from the src to the dest.
+
+    :param src_file: source path
+    :param dest_file: destination path
+    :return: None
+    """
+
+    src = Path(src_file)
+    dest = Path(dest_file)
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+
+    shutil.copy2(src, dest)
+
+
+def sort_images(src_path, dest_path):
+    """Sort files from the source path into the destination path.
+
+    :param src_path: Path to read the files from.
+    :param dest_path: Path to write files to.
+    :return:
+    """
+
+    for src in search_directory(src_path):
+        if not is_file(src):
+            continue
+        d = get_date_from_filename(src.name)
+        if d is None:
+            continue
+
+        if src.suffix.lower() in ['.jpg', '.png']:
+            prefix = 'IMG_'
+        elif src.suffix.lower() in ['.mp4']:
+            prefix = 'VID_'
+        else:
+            continue
+
+        dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
+
+        move_file(src, dest)
