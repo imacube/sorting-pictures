@@ -1,9 +1,22 @@
 """Sort photos from the source directory into the destination directory."""
+import argparse
 import hashlib
 import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+
+    parser = argparse.ArgumentParser(
+        description="""Sort image files based on filename timestamp into year-month folders.""")
+    parser.add_argument('--move', action='store_true', required=False, default=False,
+                        help="Move files instead of copying them (default action is to copy).")
+    parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
+
+    return parser
 
 
 def get_date_from_filename(filename):
@@ -92,16 +105,20 @@ def move_file(src_file, dest_file, move=False):
     if is_file(dest) and not diff_files(src, dest):
         return False
 
-    shutil.copy2(src, dest)
+    if move:
+        shutil.move(src, dest)
+    else:
+        shutil.copy2(src, dest)
 
     return True
 
 
-def sort_images(src_path, dest_path):
+def sort_images(src_path, dest_path, move=False):
     """Sort files from the source path into the destination path.
 
     :param src_path: Path to read the files from.
     :param dest_path: Path to write files to.
+    :param move: True to move files, False to copy them.
     :return:
     """
 
@@ -121,24 +138,31 @@ def sort_images(src_path, dest_path):
 
         dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
 
-        move_file(src, dest)
+        move_file(src, dest, move)
 
 
-def main():
-    """Main method for this, typically called by
+def main(args):
+    """Main method to be called by CLI.
 
+    :param args: CLI arguments.
     :return:
     """
 
-    if len(sys.argv) < 3:
-        print('''Expecting two arguments:\nsource_directory destination_directory''')
+    if '--move' in args.paths:
+        print('--move must come before source and destination paths.')
         sys.exit(1)
 
-    dest_path = Path(sys.argv[-1])
+    dest_path = Path(args.paths[-1])
 
-    for src_path in [Path(p) for p in sys.argv[1:-1]]:
-        sort_images(src_path, dest_path)
+    for src_path in [Path(p) for p in args.paths[:-1]]:
+        sort_images(src_path, dest_path, move=args.move)
 
 
 if __name__ == '__main__':
-    main()
+    parse = parse_arguments()
+    args = parse.parse_args()
+    if not len(args.paths):
+        parse.print_help()
+        sys.exit(1)
+
+    main(args)
