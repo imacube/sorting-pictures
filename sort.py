@@ -56,8 +56,8 @@ def is_file(file_path):
 def diff_files(src_file, dest_file):
     """Hash two files and see if they are the same or not.
 
-    :param src_file:
-    :param dest_file:
+    :param src_file: Source file.
+    :param dest_file: Destination file.
     :return:
     """
     # return run_hash(path_to_file, hashlib.sha512()).hexdigest()
@@ -75,11 +75,12 @@ def diff_files(src_file, dest_file):
     return src_hash.hexdigest() == dest_hash.hexdigest()
 
 
-def move_file(src_file, dest_file):
+def move_file(src_file, dest_file, move=False):
     """Move a file from the src to the dest.
 
-    :param src_file: source path
-    :param dest_file: destination path
+    :param src_file: Source path.
+    :param dest_file: Destination path.
+    :param move: True to move files, False to copy them.
     :return: None
     """
 
