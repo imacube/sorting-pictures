@@ -133,9 +133,10 @@ def main():
         print('''Expecting two arguments:\nsource_directory destination_directory''')
         sys.exit(1)
 
-    src_path, dest_path = [Path(p) for p in sys.argv[1:3]]
+    dest_path = sys.argv[-1]
 
-    sort_images(src_path, dest_path)
+    for src_path in sys.argv[1:-1]:
+        sort_images(src_path, dest_path)
 
 
 if __name__ == '__main__':

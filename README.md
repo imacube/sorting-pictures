@@ -9,6 +9,8 @@ This script copies files from the source directory to the destination directory.
 ```shell script
 source venv/bin/activate
 ./sort.py sample-images destination-images
+# or multiple sources ending with the destination
+./sort.py sample-images sample-images-2 samle-images-3 destination-images
 ```
 
 # resize.py
