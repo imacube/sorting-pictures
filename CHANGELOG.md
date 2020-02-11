@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2020-02-10
+### Fixed
+- If not enough arguments are passed, print help message *and exit*.
+
 ## [0.3.0] - 2020-02-09
 ### Added
 - Method to hash two files and return boolean if same/differ.

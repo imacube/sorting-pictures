@@ -131,6 +131,7 @@ def main():
 
     if len(sys.argv) < 3:
         print('''Expecting two arguments:\nsource_directory destination_directory''')
+        sys.exit(1)
 
     src_path, dest_path = [Path(p) for p in sys.argv[1:3]]
 
