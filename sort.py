@@ -176,8 +176,8 @@ class SortingPictures:
             self.sort_images(src_path, dest_path, move=args.move)
 
         if args.collisions:
-            for f in self.log['collisions']:
-                print(f)
+            for s, d in self.log['collisions']:
+                print('%s  %s' % (s, d))
 
 
 if __name__ == '__main__':
