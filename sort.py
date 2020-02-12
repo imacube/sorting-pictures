@@ -10,7 +10,7 @@ from pathlib import Path
 class SortingPictures:
     def __init__(self):
         self.log = dict()
-        for key in 'parse_date suffix move'.split():
+        for key in 'parse_date suffix collisions'.split():
             self.log[key] = list()
 
     @staticmethod
@@ -21,8 +21,8 @@ class SortingPictures:
             description="""Sort image files based on filename timestamp into year-month folders.""")
         parser.add_argument('--move', action='store_true', required=False, default=False,
                             help="Move files instead of copying them (default action is to copy).")
-        parser.add_argument('--hash', action='store_true', required=False, default=False,
-                            help='Print out source and destination files with hash collisions.')
+        parser.add_argument('--collisions', action='store_true', required=False, default=False,
+                            help='Print out source and destination files with collisions.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
@@ -151,7 +151,7 @@ class SortingPictures:
             dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
 
             if not self.move_file(src, dest, move):
-                self.log['move'].append((src, dest))
+                self.log['collisions'].append((src, dest))
 
     def main(self):
         """Main method to be called by CLI.
@@ -165,15 +165,21 @@ class SortingPictures:
             parser.print_help()
             sys.exit(1)
 
-        if '--move' in args.paths:
-            print('--move must come before source and destination paths.')
-            sys.exit(1)
+        for key in self.log:
+            if '--%s' % str(key) in args.paths:
+                print('--%s must come before source and destination paths.' % str(key))
+                sys.exit(1)
 
         dest_path = Path(args.paths[-1])
 
         for src_path in [Path(p) for p in args.paths[:-1]]:
             self.sort_images(src_path, dest_path, move=args.move)
 
+        if args.collisions:
+            for f in self.log['collisions']:
+                print(f)
+
 
 if __name__ == '__main__':
-    SortingPictures().main()
+    sorting_pictures = SortingPictures()
+    sorting_pictures.main()

@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Log of files not copied or moved.
+- `--collisions` argument to print move collisions.
 
 ### Changed
 - Refactored into a class.
+- Moved all Namespace builds into a fixture.
 
 ### Fixed
 - `move_file` now checks if source exists, destination exists and if so that the destination is an actual file

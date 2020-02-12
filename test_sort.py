@@ -15,21 +15,28 @@ def sorting_pictures():
     return SortingPictures()
 
 
+@pytest.fixture
+def namespace():
+    return Namespace(move=False, collisions=False, paths='src dest'.split())
+
+
 class TestParseArguments:
-    def test_basic(self, sorting_pictures):
+    def test_basic(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src dest'.split())
-        assert args == Namespace(move=False, paths=['src', 'dest'])
+        assert args == namespace
 
-    def test_move(self, sorting_pictures):
+    def test_move(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--move src dest'.split())
-        assert args == Namespace(move=True, paths=['src', 'dest'])
+        args = parser.parse_args('--collisions src dest'.split())
+        namespace.collisions = True
+        assert args == namespace
 
-    def test_many_sources(self, sorting_pictures):
+    def test_many_sources(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
-        assert args == Namespace(move=False, paths=['src0', 'src1', 'src2', 'src3', 'dest'])
+        namespace.paths = 'src0 src1 src2 src3 dest'.split()
+        assert args == Namespace(move=False, collisions=False, paths=['src0', 'src1', 'src2', 'src3', 'dest'])
 
 
 class TestGetDateFromFile:
@@ -230,12 +237,12 @@ class TestSortImages:
 
         log = sorting_pictures.log
         log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
-        log['move'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['move']]
+        log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
         assert log == {
             'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
                            PosixPath('src/metadata.jpg')],
             'suffix': [],
-            'move': [
+            'collisions': [
                 (
                     PosixPath('src/no-metadata/IMG_20171022_124203_01.jpg'),
                     PosixPath('dest/2017-10/IMG_20171022_124203.jpg'))]
@@ -271,12 +278,12 @@ class TestSortImages:
 
         log = sorting_pictures.log
         log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
-        log['move'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['move']]
+        log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
         assert log == {
             'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
                            PosixPath('src/metadata.jpg')],
             'suffix': [],
-            'move': [(PosixPath(
+            'collisions': [(PosixPath(
                 'src/no-metadata/IMG_20171022_124203_01.jpg'), PosixPath('dest/2017-10/IMG_20171022_124203.jpg'))]
         }
 
@@ -301,30 +308,33 @@ class TestSortImages:
 
         log = sorting_pictures.log
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
-        assert log == {'parse_date': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')], 'move': []}
+        assert log == {'parse_date': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
+                       'collisions': []}
 
 
 class TestMain:
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_basic(self, mock_parser, mock_sort_images, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=False, paths='src dest'.split())
+    def test_basic(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_basic_move(self, mock_parser, mock_sort_images, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=True, paths='src dest'.split())
+    def test_basic_move(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.move = True
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_multi_src(self, mock_parser, mock_sort_images, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=False, paths='src0 src1 src2 dest'.split())
+    def test_multi_src(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.paths = 'src0 src1 src2 dest'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=False),
@@ -333,8 +343,10 @@ class TestMain:
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_multi_src_move(self, mock_parser, mock_sort_images, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=True, paths='src0 src1 src2 dest'.split())
+    def test_multi_src_move(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.move = True
+        namespace.paths = 'src0 src1 src2 dest'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True),
@@ -343,14 +355,15 @@ class TestMain:
 
     @patch('sys.exit')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_bad_order(self, mock_parser, mock_exit, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=False,
-                                                                     paths='src0 src1 src2 dest --move'.split())
+    def test_bad_order(self, mock_parser, mock_exit, sorting_pictures, namespace):
+        namespace.paths = 'src0 src1 src2 dest --collisions'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
+
         sorting_pictures.main()
         mock_exit.assert_called_once_with(1)
+        namespace.paths = 'src0 src1 --collisions src2 dest'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
 
-        mock_parser.return_value.parse_args.return_value = Namespace(move=False,
-                                                                     paths='src0 src1 --move src2 dest'.split())
         mock_exit.reset_mock()
         sorting_pictures.main()
         mock_exit.assert_called_once_with(1)
@@ -358,8 +371,9 @@ class TestMain:
     @patch('sys.exit')
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_too_few_args(self, mock_parser, mock_sort_images, mock_exit, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=False, paths='src'.split())
+    def test_too_few_args(self, mock_parser, mock_sort_images, mock_exit, sorting_pictures, namespace):
+        namespace.paths = 'src'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         mock_sort_images.assert_not_called()
@@ -367,10 +381,7 @@ class TestMain:
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_hash(self, mock_parser, mock_sort_images, sorting_pictures):
-        mock_parser.return_value.parse_args.return_value = Namespace(move=True, paths='src0 src1 src2 dest'.split())
+    def test_collisions_true(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.collisions = True
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
-
-        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True),
-                                                   call(PosixPath('src1'), PosixPath('dest'), move=True),
-                                                   call(PosixPath('src2'), PosixPath('dest'), move=True)]
