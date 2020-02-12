@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Log of files not copied or moved.
 - `--collisions` argument to print move collisions.
+- Collisions that have a different hash will have an index number appended to
+  the name before the suffix in the format `-%d`. For example: `IMG_20200212_090807-1.jpg`.
+- Added tilde (`~`) to replacement list in image filenames.
 
 ### Changed
 - Refactored into a class.

@@ -35,7 +35,8 @@ class SortingPictures:
         :return: datetime.datetime
         """
 
-        f = filename.split('.')[0]
+        f = Path(filename).stem
+        f = f.replace('~', '_')
         f = f.replace('-', '_')
         f = f.split('_')[1:3]
         f = ''.join(f)
@@ -110,11 +111,16 @@ class SortingPictures:
 
         if not src.is_file():
             return False
-        if dest.exists() and (
-                not self.is_file(dest) or
-                not self.diff_files(src, dest)
-        ):
-            return False
+        if dest.exists():
+            if not self.is_file(dest):
+                return False
+            else:
+                index = 1
+                stem = dest.stem
+                suffix = dest.suffix
+                while dest.exists() and not self.diff_files(src, dest):
+                    dest = dest.parent / ('%s-%d%s' % (stem, index, suffix))
+                    index += 1
 
         if move:
             shutil.move(src, dest)
