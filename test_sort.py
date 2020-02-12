@@ -93,6 +93,7 @@ class TestSearchDirectory:
                           PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
                           PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
                           PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
+                          PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
                           PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4')]
 
 
@@ -162,6 +163,47 @@ class TestMoveFile:
 
         assert sorting_pictures.move_file(src_file, dest_file) is False
 
+    def test_src_file_is_dir(self, sorting_pictures, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
+
+        assert not dest_file.exists()
+        sorting_pictures.move_file(src, dest_file)
+        assert not dest_file.exists()
+
+    def test_dest_file_is_dir(self, sorting_pictures, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest = tmp_path / 'dest'
+        dest.mkdir(parents=True, exist_ok=True)
+
+        assert dest.is_dir()
+        assert not sorting_pictures.move_file(src_file, dest)
+
+    def test_dest_file_is_symlink(self, sorting_pictures, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+
+        dest = tmp_path / 'dest'
+        dest.mkdir(parents=True, exist_ok=True)
+        dest = dest / 'metadata-dest.jpg'
+        shutil.copy2('sample-images/metadata.jpg', dest)
+        dest_symlink = tmp_path / 'dest' / 'metadata-symlink.jpg'
+        dest_symlink.symlink_to(dest)
+
+        assert dest.is_file()
+        assert dest_symlink.is_symlink()
+        assert not sorting_pictures.move_file(src_file, dest_symlink)
+
 
 class TestSortImages:
     def test_successful_run_copy(self, sorting_pictures, tmp_path):
@@ -185,6 +227,19 @@ class TestSortImages:
                           PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
                           PosixPath('dest/2017-10/IMG_20171007_143321.png'),
                           PosixPath('dest/2017-10/IMG_20171022_124203.jpg')]
+
+        log = sorting_pictures.log
+        log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
+        log['move'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['move']]
+        assert log == {
+            'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
+                           PosixPath('src/metadata.jpg')],
+            'suffix': [],
+            'move': [
+                (
+                    PosixPath('src/no-metadata/IMG_20171022_124203_01.jpg'),
+                    PosixPath('dest/2017-10/IMG_20171022_124203.jpg'))]
+        }
 
     def test_successful_run_move(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -211,7 +266,19 @@ class TestSortImages:
         result = sorting_pictures.search_directory(src)
         result = [p.relative_to(tmp_path) for p in result]
         assert result == [PosixPath('src/metadata-copy.jpg'), PosixPath('src/VID'), PosixPath('src/no-m'),
-                          PosixPath('src/no-metadata.jpg'), PosixPath('src/metadata.jpg'), PosixPath('src/no-metadata')]
+                          PosixPath('src/no-metadata.jpg'), PosixPath('src/metadata.jpg'), PosixPath('src/no-metadata'),
+                          PosixPath('src/no-metadata/IMG_20171022_124203_01.jpg')]
+
+        log = sorting_pictures.log
+        log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
+        log['move'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['move']]
+        assert log == {
+            'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
+                           PosixPath('src/metadata.jpg')],
+            'suffix': [],
+            'move': [(PosixPath(
+                'src/no-metadata/IMG_20171022_124203_01.jpg'), PosixPath('dest/2017-10/IMG_20171022_124203.jpg'))]
+        }
 
     def test_unknown_suffix(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -231,6 +298,10 @@ class TestSortImages:
         result = sorting_pictures.search_directory(dest)
 
         assert result == list()
+
+        log = sorting_pictures.log
+        log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
+        assert log == {'parse_date': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')], 'move': []}
 
 
 class TestMain:
@@ -293,3 +364,13 @@ class TestMain:
 
         mock_sort_images.assert_not_called()
         mock_exit.assert_called_once_with(1)
+
+    @patch('sort.SortingPictures.sort_images')
+    @patch('sort.SortingPictures.parse_arguments')
+    def test_hash(self, mock_parser, mock_sort_images, sorting_pictures):
+        mock_parser.return_value.parse_args.return_value = Namespace(move=True, paths='src0 src1 src2 dest'.split())
+        sorting_pictures.main()
+
+        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True),
+                                                   call(PosixPath('src1'), PosixPath('dest'), move=True),
+                                                   call(PosixPath('src2'), PosixPath('dest'), move=True)]

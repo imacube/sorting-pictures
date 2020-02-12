@@ -9,7 +9,9 @@ from pathlib import Path
 
 class SortingPictures:
     def __init__(self):
-        pass
+        self.log = dict()
+        for key in 'parse_date suffix move'.split():
+            self.log[key] = list()
 
     @staticmethod
     def parse_arguments():
@@ -19,11 +21,14 @@ class SortingPictures:
             description="""Sort image files based on filename timestamp into year-month folders.""")
         parser.add_argument('--move', action='store_true', required=False, default=False,
                             help="Move files instead of copying them (default action is to copy).")
+        parser.add_argument('--hash', action='store_true', required=False, default=False,
+                            help='Print out source and destination files with hash collisions.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
 
-    def get_date_from_filename(self, filename):
+    @staticmethod
+    def get_date_from_filename(filename):
         """Derive the images timestamp from the filename.
 
         :param filename: Filename of the image file.
@@ -74,9 +79,8 @@ class SortingPictures:
 
         :param src_file: Source file.
         :param dest_file: Destination file.
-        :return:
+        :return: True if hash matches, False if different.
         """
-        # return run_hash(path_to_file, hashlib.sha512()).hexdigest()
 
         src_hash, dest_hash = hashlib.sha512(), hashlib.sha512()
 
@@ -104,7 +108,12 @@ class SortingPictures:
 
         dest.parent.mkdir(parents=True, exist_ok=True)
 
-        if self.is_file(dest) and not self.diff_files(src, dest):
+        if not src.is_file():
+            return False
+        if dest.exists() and (
+                not self.is_file(dest) or
+                not self.diff_files(src, dest)
+        ):
             return False
 
         if move:
@@ -128,6 +137,7 @@ class SortingPictures:
                 continue
             d = self.get_date_from_filename(src.name)
             if d is None:
+                self.log['parse_date'].append(src)
                 continue
 
             if src.suffix.lower() in ['.jpg', '.png']:
@@ -135,11 +145,13 @@ class SortingPictures:
             elif src.suffix.lower() in ['.mp4']:
                 prefix = 'VID_'
             else:
+                self.log['suffix'].append(src)
                 continue
 
             dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
 
-            self.move_file(src, dest, move)
+            if not self.move_file(src, dest, move):
+                self.log['move'].append((src, dest))
 
     def main(self):
         """Main method to be called by CLI.
