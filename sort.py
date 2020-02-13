@@ -12,7 +12,7 @@ from tqdm import tqdm
 class SortingPictures:
     def __init__(self):
         self.log = dict()
-        for key in 'parse_date suffix collisions'.split():
+        for key in 'parse suffix collisions'.split():
             self.log[key] = list()
 
     @staticmethod
@@ -27,6 +27,8 @@ class SortingPictures:
                             help='Print out source and destination files with collisions.')
         parser.add_argument('--suffix', action='store_true', required=False, default=False,
                             help='Print out source files with unknown suffixes (extension).')
+        parser.add_argument('--parse', action='store_true', required=False, default=False,
+                            help='Print out source files with filenames that could not be parsed.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
@@ -147,7 +149,7 @@ class SortingPictures:
                 continue
             d = self.get_date_from_filename(src.name)
             if d is None:
-                self.log['parse_date'].append(src)
+                self.log['parse'].append(src)
                 continue
 
             if src.suffix.lower() in ['.jpg', '.png']:
@@ -190,6 +192,9 @@ class SortingPictures:
                 print('%s  %s' % (s, d))
         if args.suffix:
             for s in self.log['suffix']:
+                print(s)
+        if args.parse:
+            for s in self.log['parse']:
                 print(s)
 
 

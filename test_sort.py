@@ -17,7 +17,7 @@ def sorting_pictures():
 
 @pytest.fixture
 def namespace():
-    return Namespace(move=False, collisions=False, suffix=False, paths='src dest'.split())
+    return Namespace(move=False, collisions=False, suffix=False, parse=False, paths='src dest'.split())
 
 
 class TestParseArguments:
@@ -36,7 +36,7 @@ class TestParseArguments:
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
         namespace.paths = 'src0 src1 src2 src3 dest'.split()
-        assert args == Namespace(move=False, collisions=False, suffix=False,
+        assert args == Namespace(move=False, collisions=False, suffix=False, parse=False,
                                  paths=['src0', 'src1', 'src2', 'src3', 'dest'])
 
     def test_collisions(self, sorting_pictures, namespace):
@@ -285,10 +285,10 @@ class TestSortImages:
                           PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')]
 
         log = sorting_pictures.log
-        log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
+        log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
         assert log == {
-            'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
+            'parse': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
                            PosixPath('src/metadata.jpg')],
             'suffix': [],
             'collisions': []
@@ -323,10 +323,10 @@ class TestSortImages:
                           PosixPath('src/no-metadata.jpg'), PosixPath('src/metadata.jpg'), PosixPath('src/no-metadata')]
 
         log = sorting_pictures.log
-        log['parse_date'] = [p.relative_to(tmp_path) for p in log['parse_date']]
+        log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
         assert log == {
-            'parse_date': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
+            'parse': [PosixPath('src/metadata-copy.jpg'), PosixPath('src/no-metadata.jpg'),
                            PosixPath('src/metadata.jpg')],
             'suffix': [],
             'collisions': []
@@ -353,7 +353,7 @@ class TestSortImages:
 
         log = sorting_pictures.log
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
-        assert log == {'parse_date': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
+        assert log == {'parse': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
                        'collisions': []}
 
 
@@ -432,6 +432,7 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.log['collisions'] = [('a', 'b')]
         sorting_pictures.log['suffix'] = ['a.UNKNOWN']
+        sorting_pictures.log['parse'] = ['metadata.jpg']
         sorting_pictures.main()
 
         assert mock_print.mock_calls == [call('a  b')]
@@ -444,6 +445,20 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.log['collisions'] = [('a', 'b')]
         sorting_pictures.log['suffix'] = ['a.UNKNOWN']
+        sorting_pictures.log['parse'] = ['metadata.jpg']
         sorting_pictures.main()
 
         assert mock_print.mock_calls == [call('a.UNKNOWN')]
+
+    @patch('builtins.print')
+    @patch('sort.SortingPictures.sort_images')
+    @patch('sort.SortingPictures.parse_arguments')
+    def test_parse_true(self, mock_parser, mock_sorting_pictures, mock_print, sorting_pictures, namespace):
+        namespace.parse = True
+        mock_parser.return_value.parse_args.return_value = namespace
+        sorting_pictures.log['collisions'] = [('a', 'b')]
+        sorting_pictures.log['suffix'] = ['a.UNKNOWN']
+        sorting_pictures.log['parse'] = ['metadata.jpg']
+        sorting_pictures.main()
+
+        assert mock_print.mock_calls == [call('metadata.jpg')]
