@@ -3,7 +3,7 @@ import shutil
 from argparse import Namespace
 from datetime import datetime
 from pathlib import PosixPath, Path
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call
 
 import pytest
 
@@ -403,13 +403,13 @@ class TestMain:
     def test_bad_order(self, mock_parser, mock_exit, sorting_pictures, namespace):
         namespace.paths = 'src0 src1 src2 dest --collisions'.split()
         mock_parser.return_value.parse_args.return_value = namespace
-
         sorting_pictures.main()
         mock_exit.assert_called_once_with(1)
-        namespace.paths = 'src0 src1 --collisions src2 dest'.split()
-        mock_parser.return_value.parse_args.return_value = namespace
 
         mock_exit.reset_mock()
+
+        namespace.paths = 'src0 src1 --collisions src2 dest'.split()
+        mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
         mock_exit.assert_called_once_with(1)
 
@@ -424,9 +424,26 @@ class TestMain:
         mock_sort_images.assert_not_called()
         mock_exit.assert_called_once_with(1)
 
+    @patch('builtins.print')
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_collisions_true(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+    def test_collisions_true(self, mock_parser, mock_sorting_pictures, mock_print, sorting_pictures, namespace):
         namespace.collisions = True
         mock_parser.return_value.parse_args.return_value = namespace
+        sorting_pictures.log['collisions'] = [('a', 'b')]
+        sorting_pictures.log['suffix'] = ['a.UNKNOWN']
         sorting_pictures.main()
+
+        assert mock_print.mock_calls == [call('a  b')]
+
+    @patch('builtins.print')
+    @patch('sort.SortingPictures.sort_images')
+    @patch('sort.SortingPictures.parse_arguments')
+    def test_suffix_true(self, mock_parser, mock_sorting_pictures, mock_print, sorting_pictures, namespace):
+        namespace.suffix = True
+        mock_parser.return_value.parse_args.return_value = namespace
+        sorting_pictures.log['collisions'] = [('a', 'b')]
+        sorting_pictures.log['suffix'] = ['a.UNKNOWN']
+        sorting_pictures.main()
+
+        assert mock_print.mock_calls == [call('a.UNKNOWN')]
