@@ -6,6 +6,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from tqdm import tqdm
+
 
 class SortingPictures:
     def __init__(self):
@@ -138,7 +140,7 @@ class SortingPictures:
         :return:
         """
 
-        for src in self.search_directory(src_path):
+        for src in tqdm(self.search_directory(src_path)):
             if not self.is_file(src):
                 continue
             d = self.get_date_from_filename(src.name)
