@@ -25,6 +25,8 @@ class SortingPictures:
                             help="Move files instead of copying them (default action is to copy).")
         parser.add_argument('--collisions', action='store_true', required=False, default=False,
                             help='Print out source and destination files with collisions.')
+        parser.add_argument('--suffix', action='store_true', required=False, default=False,
+                            help='Print out source files with unknown suffixes (extension).')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
@@ -111,7 +113,7 @@ class SortingPictures:
 
         dest.parent.mkdir(parents=True, exist_ok=True)
 
-        if not src.is_file():
+        if not self.is_file(src):
             return False
         if dest.exists():
             if not self.is_file(dest):
@@ -186,6 +188,9 @@ class SortingPictures:
         if args.collisions:
             for s, d in self.log['collisions']:
                 print('%s  %s' % (s, d))
+        if args.suffix:
+            for s in self.log['suffix']:
+                print(s)
 
 
 if __name__ == '__main__':

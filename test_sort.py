@@ -17,7 +17,7 @@ def sorting_pictures():
 
 @pytest.fixture
 def namespace():
-    return Namespace(move=False, collisions=False, paths='src dest'.split())
+    return Namespace(move=False, collisions=False, suffix=False, paths='src dest'.split())
 
 
 class TestParseArguments:
@@ -28,15 +28,28 @@ class TestParseArguments:
 
     def test_move(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--collisions src dest'.split())
-        namespace.collisions = True
+        args = parser.parse_args('--move src dest'.split())
+        namespace.move = True
         assert args == namespace
 
     def test_many_sources(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
         namespace.paths = 'src0 src1 src2 src3 dest'.split()
-        assert args == Namespace(move=False, collisions=False, paths=['src0', 'src1', 'src2', 'src3', 'dest'])
+        assert args == Namespace(move=False, collisions=False, suffix=False,
+                                 paths=['src0', 'src1', 'src2', 'src3', 'dest'])
+
+    def test_collisions(self, sorting_pictures, namespace):
+        parser = sorting_pictures.parse_arguments()
+        args = parser.parse_args('--collisions src dest'.split())
+        namespace.collisions = True
+        assert args == namespace
+
+    def test_suffix(self, sorting_pictures, namespace):
+        parser = sorting_pictures.parse_arguments()
+        args = parser.parse_args('--suffix src dest'.split())
+        namespace.suffix = True
+        assert args == namespace
 
 
 class TestGetDateFromFile:
@@ -193,12 +206,13 @@ class TestMoveFile:
         src = tmp_path / 'src'
         src.mkdir(parents=True, exist_ok=True)
         src_file = src / 'metadata.jpg'
-        shutil.copy2('sample-images/metadata.jpg', src_file)
+        src_file.mkdir()
 
         dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
 
+        assert src_file.is_dir()
         assert not dest_file.exists()
-        sorting_pictures.move_file(src, dest_file)
+        sorting_pictures.move_file(src_file, dest_file)
         assert not dest_file.exists()
 
     def test_dest_file_is_dir(self, sorting_pictures, tmp_path):
@@ -212,6 +226,21 @@ class TestMoveFile:
 
         assert dest.is_dir()
         assert not sorting_pictures.move_file(src_file, dest)
+
+    def test_src_file_is_symlink(self, sorting_pictures, tmp_path):
+        src = tmp_path / 'src'
+        src.mkdir(parents=True, exist_ok=True)
+        src_file = src / 'metadata.jpg'
+        shutil.copy2('sample-images/metadata.jpg', src_file)
+        src_file = src / 'metadata-symlink.jpg'
+        src_file.symlink_to(src / 'metadata.jpg')
+
+        dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
+
+        assert src_file.is_symlink()
+        assert not dest_file.exists()
+        sorting_pictures.move_file(src_file, dest_file)
+        assert not dest_file.exists()
 
     def test_dest_file_is_symlink(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
