@@ -462,3 +462,18 @@ class TestMain:
         sorting_pictures.main()
 
         assert mock_print.mock_calls == [call('metadata.jpg')]
+
+    @patch('builtins.print')
+    @patch('sort.SortingPictures.sort_images')
+    @patch('sort.SortingPictures.parse_arguments')
+    def test_all_output_options(self, mock_parser, mock_sorting_pictures, mock_print, sorting_pictures, namespace):
+        namespace.collisions = True
+        namespace.suffix = True
+        namespace.parse = True
+        mock_parser.return_value.parse_args.return_value = namespace
+        sorting_pictures.log['collisions'] = [('a', 'b')]
+        sorting_pictures.log['suffix'] = ['a.UNKNOWN']
+        sorting_pictures.log['parse'] = ['metadata.jpg']
+        sorting_pictures.main()
+
+        assert mock_print.mock_calls == [call('a  b'), call('a.UNKNOWN'), call('metadata.jpg')]
