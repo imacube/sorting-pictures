@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.9.0] - 2020-02-13
 ### Added
 - `--suffix` argument to print out unknown suffixes.
+- `--parse` argument to print out filenames that could not be parsed.
 
 ### Fixed
 - Tests for `move_file` if the source is a directory or symlink.
