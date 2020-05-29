@@ -131,6 +131,7 @@ class TestSearchDirectory:
                           PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
                           PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
                           PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
+                          PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
                           PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
                           PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
                           PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
@@ -310,7 +311,8 @@ class TestSortImages:
                        'parse': [PosixPath('src/metadata-copy.jpg'),
                                  PosixPath('src/IMG_NO_PARSE.jpg'),
                                  PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg')],
+                                 PosixPath('src/metadata.jpg'),
+                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
                        'suffix': [PosixPath('src/VID'),
                                   PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 
@@ -351,7 +353,8 @@ class TestSortImages:
                           PosixPath('src/no-m'),
                           PosixPath('src/no-metadata.jpg'),
                           PosixPath('src/metadata.jpg'),
-                          PosixPath('src/no-metadata')]
+                          PosixPath('src/no-metadata'),
+                          PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')]
 
         log = sorting_pictures.log
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
@@ -362,7 +365,8 @@ class TestSortImages:
                        'parse': [PosixPath('src/metadata-copy.jpg'),
                                  PosixPath('src/IMG_NO_PARSE.jpg'),
                                  PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg')],
+                                 PosixPath('src/metadata.jpg'),
+                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
                        'suffix': [PosixPath('src/VID'),
                                   PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 
@@ -417,7 +421,8 @@ class TestSortImages:
                        'parse': [PosixPath('src/metadata-copy.jpg'),
                                  PosixPath('src/IMG_NO_PARSE.jpg'),
                                  PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg')],
+                                 PosixPath('src/metadata.jpg'),
+                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
                        'suffix': [PosixPath('src/VID'),
                                   PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 
@@ -448,7 +453,8 @@ class TestSortImages:
                        'parse': [PosixPath('src/metadata-copy.jpg'),
                                  PosixPath('src/IMG_NO_PARSE.jpg'),
                                  PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg')],
+                                 PosixPath('src/metadata.jpg'),
+                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
                        'suffix': [PosixPath('src/VID'),
                                   PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 

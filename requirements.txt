@@ -1,3 +1,4 @@
 Pillow
 pytest
 tqdm
+pytest-cov

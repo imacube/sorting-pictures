@@ -152,8 +152,6 @@ class SortingPictures:
         """
 
         for src in tqdm(self.search_directory(src_path)):
-            if src.name in self.ignore:
-                continue
             if src.is_dir():
                 continue
 
