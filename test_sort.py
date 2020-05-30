@@ -119,23 +119,23 @@ class TestSearchDirectory:
     def test_dir(self, sorting_pictures):
         result = sorting_pictures.search_directory('sample-images')
 
-        assert result == [PosixPath('sample-images/metadata-copy.jpg'),
-                          PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
-                          PosixPath('sample-images/VID'),
-                          PosixPath('sample-images/IMG_20171022_124203.unknown_suffix'),
-                          PosixPath('sample-images/IMG_NO_PARSE.jpg'),
-                          PosixPath('sample-images/no-m'),
-                          PosixPath('sample-images/no-metadata.jpg'),
-                          PosixPath('sample-images/metadata.jpg'),
-                          PosixPath('sample-images/no-metadata'),
-                          PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
-                          PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
-                          PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
-                          PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
-                          PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
-                          PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
-                          PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
-                          PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif')]
+        assert sorted(result) == sorted([PosixPath('sample-images/metadata-copy.jpg'),
+                                         PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
+                                         PosixPath('sample-images/VID'),
+                                         PosixPath('sample-images/IMG_20171022_124203.unknown_suffix'),
+                                         PosixPath('sample-images/IMG_NO_PARSE.jpg'),
+                                         PosixPath('sample-images/no-m'),
+                                         PosixPath('sample-images/no-metadata.jpg'),
+                                         PosixPath('sample-images/metadata.jpg'),
+                                         PosixPath('sample-images/no-metadata'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
+                                         PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
+                                         PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
+                                         PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
+                                         PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif')])
 
 
 class TestDiffFiles:
@@ -291,30 +291,35 @@ class TestSortImages:
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
 
-        assert result == [PosixPath('dest/2018-07'),
-                          PosixPath('dest/2018-10'),
-                          PosixPath('dest/2017-11'),
-                          PosixPath('dest/2017-10'),
-                          PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
-                          PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
-                          PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
-                          PosixPath('dest/2017-10/IMG_20171007_143321.png'),
-                          PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
-                          PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')]
+        assert sorted(result) == sorted([PosixPath('dest/2018-07'),
+                                         PosixPath('dest/2018-10'),
+                                         PosixPath('dest/2017-11'),
+                                         PosixPath('dest/2017-10'),
+                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
+                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171007_143321.png'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')])
 
         log = sorting_pictures.log
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
-        assert log == {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
-                                       PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
-                       'parse': [PosixPath('src/metadata-copy.jpg'),
-                                 PosixPath('src/IMG_NO_PARSE.jpg'),
-                                 PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg'),
-                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
-                       'suffix': [PosixPath('src/VID'),
-                                  PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        expected = {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
+                                    PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
+                    'parse': [PosixPath('src/metadata-copy.jpg'),
+                              PosixPath('src/IMG_NO_PARSE.jpg'),
+                              PosixPath('src/no-metadata.jpg'),
+                              PosixPath('src/metadata.jpg'),
+                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                    'suffix': [PosixPath('src/VID'),
+                               PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+        log = {k: sorted(v) for k, v in log.items()}
+        expected = {k: sorted(v) for k, v in expected.items()}
+
+        assert log == expected
 
     def test_successful_run_move(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -332,43 +337,47 @@ class TestSortImages:
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
 
-        assert result == [PosixPath('dest/2018-07'),
-                          PosixPath('dest/2018-10'),
-                          PosixPath('dest/2017-11'),
-                          PosixPath('dest/2017-10'),
-                          PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
-                          PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
-                          PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
-                          PosixPath('dest/2017-10/IMG_20171007_143321.png'),
-                          PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
-                          PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')]
+        assert sorted(result) == sorted([PosixPath('dest/2018-07'),
+                                         PosixPath('dest/2018-10'),
+                                         PosixPath('dest/2017-11'),
+                                         PosixPath('dest/2017-10'),
+                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
+                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171007_143321.png'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')])
 
         result = sorting_pictures.search_directory(src)
         result = [p.relative_to(tmp_path) for p in result]
-        assert result == [PosixPath('src/metadata-copy.jpg'),
-                          PosixPath('src/IMG_20171022_010203_01.jpg'),
-                          PosixPath('src/VID'),
-                          PosixPath('src/IMG_20171022_124203.unknown_suffix'),
-                          PosixPath('src/IMG_NO_PARSE.jpg'),
-                          PosixPath('src/no-m'),
-                          PosixPath('src/no-metadata.jpg'),
-                          PosixPath('src/metadata.jpg'),
-                          PosixPath('src/no-metadata'),
-                          PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')]
+        assert sorted(result) == sorted([PosixPath('src/metadata-copy.jpg'),
+                                         PosixPath('src/IMG_20171022_010203_01.jpg'),
+                                         PosixPath('src/VID'),
+                                         PosixPath('src/IMG_20171022_124203.unknown_suffix'),
+                                         PosixPath('src/IMG_NO_PARSE.jpg'),
+                                         PosixPath('src/no-m'),
+                                         PosixPath('src/no-metadata.jpg'),
+                                         PosixPath('src/metadata.jpg'),
+                                         PosixPath('src/no-metadata'),
+                                         PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')])
 
         log = sorting_pictures.log
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
-        assert log == {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
-                                       PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
-                       'parse': [PosixPath('src/metadata-copy.jpg'),
-                                 PosixPath('src/IMG_NO_PARSE.jpg'),
-                                 PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg'),
-                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
-                       'suffix': [PosixPath('src/VID'),
-                                  PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+        expected = {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
+                                    PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
+                    'parse': [PosixPath('src/metadata-copy.jpg'),
+                              PosixPath('src/IMG_NO_PARSE.jpg'),
+                              PosixPath('src/no-metadata.jpg'),
+                              PosixPath('src/metadata.jpg'),
+                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                    'suffix': [PosixPath('src/VID'),
+                               PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        log = {k: sorted(v) for k, v in log.items()}
+        expected = {k: sorted(v) for k, v in expected.items()}
+        assert log == expected
 
     def test_unknown_suffix(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -416,15 +425,21 @@ class TestSortImages:
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
-        assert log == {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
-                                       PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
-                       'parse': [PosixPath('src/metadata-copy.jpg'),
-                                 PosixPath('src/IMG_NO_PARSE.jpg'),
-                                 PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg'),
-                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
-                       'suffix': [PosixPath('src/VID'),
-                                  PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        expected = {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
+                                    PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
+                    'parse': [PosixPath('src/metadata-copy.jpg'),
+                              PosixPath('src/IMG_NO_PARSE.jpg'),
+                              PosixPath('src/no-metadata.jpg'),
+                              PosixPath('src/metadata.jpg'),
+                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                    'suffix': [PosixPath('src/VID'),
+                               PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        log = {k: sorted(v) for k, v in log.items()}
+        expected = {k: sorted(v) for k, v in expected.items()}
+
+        assert log == expected
 
     def test_run_move_dryrun(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -448,15 +463,21 @@ class TestSortImages:
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
         log['suffix'] = [p.relative_to(tmp_path) for p in log['suffix']]
         log['collisions'] = [(p_s.relative_to(tmp_path), p_d.relative_to(tmp_path)) for (p_s, p_d) in log['collisions']]
-        assert log == {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
-                                       PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
-                       'parse': [PosixPath('src/metadata-copy.jpg'),
-                                 PosixPath('src/IMG_NO_PARSE.jpg'),
-                                 PosixPath('src/no-metadata.jpg'),
-                                 PosixPath('src/metadata.jpg'),
-                                 PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
-                       'suffix': [PosixPath('src/VID'),
-                                  PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        expected = {'collisions': [(PosixPath('src/IMG_20171022_010203_01.jpg'),
+                                    PosixPath('dest/2017-10/IMG_20171022_010203.jpg'))],
+                    'parse': [PosixPath('src/metadata-copy.jpg'),
+                              PosixPath('src/IMG_NO_PARSE.jpg'),
+                              PosixPath('src/no-metadata.jpg'),
+                              PosixPath('src/metadata.jpg'),
+                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                    'suffix': [PosixPath('src/VID'),
+                               PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
+
+        log = {k: sorted(v) for k, v in log.items()}
+        expected = {k: sorted(v) for k, v in expected.items()}
+
+        assert log == expected
 
 
 class TestMain:
