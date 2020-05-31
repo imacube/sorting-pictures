@@ -17,7 +17,7 @@ def sorting_pictures():
 
 @pytest.fixture
 def namespace():
-    return Namespace(move=False, collisions=False, suffix=False, parse=False, dryrun=False, paths='src dest'.split())
+    return Namespace(move=False, collisions=False, suffix=False, parse=False, run=False, paths='src dest'.split())
 
 
 class TestParseArguments:
@@ -36,7 +36,7 @@ class TestParseArguments:
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
         namespace.paths = 'src0 src1 src2 src3 dest'.split()
-        assert args == Namespace(move=False, collisions=False, suffix=False, parse=False, dryrun=False,
+        assert args == Namespace(move=False, collisions=False, suffix=False, parse=False, run=False,
                                  paths=['src0', 'src1', 'src2', 'src3', 'dest'])
 
     def test_collisions(self, sorting_pictures, namespace):
@@ -51,10 +51,10 @@ class TestParseArguments:
         namespace.suffix = True
         assert args == namespace
 
-    def test_dryrun(self, sorting_pictures, namespace):
+    def test_run(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--dryrun src dest'.split())
-        namespace.dryrun = True
+        args = parser.parse_args('--run src dest'.split())
+        namespace.run = True
         assert args == namespace
 
 
@@ -159,7 +159,7 @@ class TestMoveFile:
         dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
 
         assert not dest_file.exists()
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
         assert dest_file.exists()
 
     def test_move_file(self, sorting_pictures, tmp_path):
@@ -172,7 +172,7 @@ class TestMoveFile:
 
         assert src_file.exists()
         assert not dest_file.exists()
-        assert sorting_pictures.move_file(src_file, dest_file, move=True) is True
+        assert sorting_pictures.move_file(src_file, dest_file, move=True, run=True) is True
         assert not src_file.exists()
         assert dest_file.exists()
 
@@ -185,10 +185,10 @@ class TestMoveFile:
         dest_file = tmp_path / 'dest' / 'metadata-dest.jpg'
 
         assert not dest_file.exists()
-        sorting_pictures.move_file(src_file, dest_file)
+        sorting_pictures.move_file(src_file, dest_file, run=True)
         assert dest_file.exists()
 
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
 
     def test_file_exists_different_hash(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -206,18 +206,18 @@ class TestMoveFile:
         shutil.copy2('sample-images/metadata.jpg', src_file)
 
         assert not dest_file.exists()
-        sorting_pictures.move_file(src_file, dest_file)
+        sorting_pictures.move_file(src_file, dest_file, run=True)
         assert dest_file.exists()
 
         shutil.copy2('sample-images/no-metadata.jpg', src_file)
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
         assert (dest_file.parent / ('%s-%d%s' % (dest_file.stem, 1, dest_file.suffix))).exists()
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
 
         shutil.copy2('sample-images/no-metadata/IMG_20171022_124203_01.jpg', src_file)
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
         assert (dest_file.parent / ('%s-%d%s' % (dest_file.stem, 2, dest_file.suffix))).exists()
-        assert sorting_pictures.move_file(src_file, dest_file) is True
+        assert sorting_pictures.move_file(src_file, dest_file, run=True) is True
 
     def test_src_file_is_dir(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
@@ -289,7 +289,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest)
+        sorting_pictures.sort_images(src, dest, run=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -339,7 +339,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, move=True)
+        sorting_pictures.sort_images(src, dest, move=True, run=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -413,7 +413,7 @@ class TestSortImages:
         assert log == {'parse': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
                        'collisions': []}
 
-    def test_run_copy_dryrun(self, sorting_pictures, tmp_path):
+    def test_run_copy_run_false(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -424,7 +424,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, dryrun=True)
+        sorting_pictures.sort_images(src, dest)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -450,7 +450,7 @@ class TestSortImages:
 
         assert log == expected
 
-    def test_run_move_dryrun(self, sorting_pictures, tmp_path):
+    def test_run_move_run_false(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -461,7 +461,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, move=True, dryrun=True)
+        sorting_pictures.sort_images(src, dest, move=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -495,16 +495,16 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dryrun=False)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, run=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_basic_dryrun(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
-        namespace.dryrun = True
+    def test_basic_run(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.run = True
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dryrun=True)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, run=True)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -513,7 +513,7 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True, dryrun=False)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True, run=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -522,9 +522,9 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=False, dryrun=False),
-                                                   call(PosixPath('src1'), PosixPath('dest'), move=False, dryrun=False),
-                                                   call(PosixPath('src2'), PosixPath('dest'), move=False, dryrun=False)]
+        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=False, run=False),
+                                                   call(PosixPath('src1'), PosixPath('dest'), move=False, run=False),
+                                                   call(PosixPath('src2'), PosixPath('dest'), move=False, run=False)]
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -534,9 +534,9 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True, dryrun=False),
-                                                   call(PosixPath('src1'), PosixPath('dest'), move=True, dryrun=False),
-                                                   call(PosixPath('src2'), PosixPath('dest'), move=True, dryrun=False)]
+        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True, run=False),
+                                                   call(PosixPath('src1'), PosixPath('dest'), move=True, run=False),
+                                                   call(PosixPath('src2'), PosixPath('dest'), move=True, run=False)]
 
     @patch('sys.exit')
     @patch('sort.SortingPictures.parse_arguments')

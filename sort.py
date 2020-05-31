@@ -35,8 +35,8 @@ class SortingPictures:
                             help='Print out source files with unknown suffixes (extension).')
         parser.add_argument('--parse', action='store_true', required=False, default=False,
                             help='Print out source files with filenames that could not be parsed.')
-        parser.add_argument('--dryrun', action='store_true', required=False, default=False,
-                            help='Do not actually copy or move files.')
+        parser.add_argument('--run', action='store_true', required=False, default=False,
+                            help='Actually copy or move files, by default all actions are dry runs.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
@@ -106,13 +106,13 @@ class SortingPictures:
 
         return src_hash.hexdigest() == dest_hash.hexdigest()
 
-    def move_file(self, src_file, dest_file, move=False, dryrun=False):
+    def move_file(self, src_file, dest_file, move=False, run=False):
         """Move a file from the src to the dest.
 
         :param src_file: Source path.
         :param dest_file: Destination path.
         :param move: True to move files, False to copy them.
-        :param dryrun: If True then files will not be copied or moved.
+        :param run: If True then files will be copied or moved.
         :return: None
         """
 
@@ -124,7 +124,7 @@ class SortingPictures:
         if dest.exists():
             if not self.is_file(dest):
                 return False
-            elif not dryrun:
+            elif run:
                 index = 1
                 stem = dest.stem
                 suffix = dest.suffix
@@ -132,7 +132,7 @@ class SortingPictures:
                     dest = dest.parent / ('%s-%d%s' % (stem, index, suffix))
                     index += 1
 
-        if dryrun:
+        if not run:
             return True
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -143,13 +143,13 @@ class SortingPictures:
 
         return True
 
-    def sort_images(self, src_path, dest_path, move=False, dryrun=False):
+    def sort_images(self, src_path, dest_path, move=False, run=False):
         """Sort files from the source path into the destination path.
 
         :param src_path: Path to read the files from.
         :param dest_path: Path to write files to.
         :param move: True to move files, False to copy them.
-        :param dryrun: If True then copy or move will be skipped.
+        :param run: If False then copy or move will be skipped.
         :return:
         """
 
@@ -172,7 +172,7 @@ class SortingPictures:
 
             dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
 
-            if not self.move_file(src, dest, move, dryrun):
+            if not self.move_file(src, dest, move, run):
                 self.log['collisions'].append((src, dest))
 
     def main(self):
@@ -195,7 +195,7 @@ class SortingPictures:
         dest_path = Path(args.paths[-1])
 
         for src_path in [Path(p) for p in args.paths[:-1]]:
-            self.sort_images(src_path, dest_path, move=args.move, dryrun=args.dryrun)
+            self.sort_images(src_path, dest_path, move=args.move, run=args.run)
 
         if args.collisions:
             for s, d in self.log['collisions']:
