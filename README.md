@@ -6,6 +6,7 @@ This script copies files from the source directory to the destination directory.
 files have:
 - Unknown file suffix.
 - Two files going to the same location with different hashes.
+- Unable to parse the datetime stamp from the filename.
 
 By default this copies files, but use the `--move` option to move files. 
 

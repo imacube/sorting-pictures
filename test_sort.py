@@ -119,23 +119,26 @@ class TestSearchDirectory:
     def test_dir(self, sorting_pictures):
         result = sorting_pictures.search_directory('sample-images')
 
-        assert sorted(result) == sorted([PosixPath('sample-images/metadata-copy.jpg'),
-                                         PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
-                                         PosixPath('sample-images/VID'),
+        assert sorted(result) == sorted([PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
                                          PosixPath('sample-images/IMG_20171022_124203.unknown_suffix'),
                                          PosixPath('sample-images/IMG_NO_PARSE.jpg'),
-                                         PosixPath('sample-images/no-m'),
-                                         PosixPath('sample-images/no-metadata.jpg'),
+                                         PosixPath('sample-images/VID'),
+                                         PosixPath('sample-images/metadata-copy.jpg'),
                                          PosixPath('sample-images/metadata.jpg'),
+                                         PosixPath('sample-images/no-m'),
                                          PosixPath('sample-images/no-metadata'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
-                                         PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
                                          PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
+                                         PosixPath('sample-images/no-metadata/20171022_010203.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
                                          PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20171104_104158~.jpg'),
+                                         PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif'),
+                                         PosixPath('sample-images/no-metadata/IMG~20171104~104159~.jpg'),
+                                         PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
                                          PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
-                                         PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif')])
+                                         PosixPath('sample-images/no-metadata.jpg')])
 
 
 class TestDiffFiles:
@@ -291,16 +294,21 @@ class TestSortImages:
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
 
-        assert sorted(result) == sorted([PosixPath('dest/2018-07'),
-                                         PosixPath('dest/2018-10'),
-                                         PosixPath('dest/2017-11'),
+        assert sorted(result) == sorted([PosixPath('dest/2017-01'),
+                                         PosixPath('dest/2017-01/IMG_20170112_110943.gif'),
                                          PosixPath('dest/2017-10'),
-                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
-                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
-                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
                                          PosixPath('dest/2017-10/IMG_20171007_143321.png'),
+                                         PosixPath('dest/2017-10/IMG_20171022_010203.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg'),
                                          PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
-                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')])
+                                         PosixPath('dest/2017-11'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104158.jpg'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104159.jpg'),
+                                         PosixPath('dest/2018-07'),
+                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
+                                         PosixPath('dest/2018-10'),
+                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif')])
 
         log = sorting_pictures.log
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
@@ -312,8 +320,7 @@ class TestSortImages:
                     'parse': [PosixPath('src/metadata-copy.jpg'),
                               PosixPath('src/IMG_NO_PARSE.jpg'),
                               PosixPath('src/no-metadata.jpg'),
-                              PosixPath('src/metadata.jpg'),
-                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                              PosixPath('src/metadata.jpg'), ],
                     'suffix': [PosixPath('src/VID'),
                                PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
         log = {k: sorted(v) for k, v in log.items()}
@@ -337,16 +344,21 @@ class TestSortImages:
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
 
-        assert sorted(result) == sorted([PosixPath('dest/2018-07'),
-                                         PosixPath('dest/2018-10'),
-                                         PosixPath('dest/2017-11'),
+        assert sorted(result) == sorted([PosixPath('dest/2017-01'),
+                                         PosixPath('dest/2017-01/IMG_20170112_110943.gif'),
                                          PosixPath('dest/2017-10'),
-                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
-                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif'),
-                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
                                          PosixPath('dest/2017-10/IMG_20171007_143321.png'),
+                                         PosixPath('dest/2017-10/IMG_20171022_010203.jpg'),
+                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg'),
                                          PosixPath('dest/2017-10/IMG_20171022_124203.jpg'),
-                                         PosixPath('dest/2017-10/IMG_20171022_124203-1.jpg')])
+                                         PosixPath('dest/2017-11'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104157.jpg'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104158.jpg'),
+                                         PosixPath('dest/2017-11/IMG_20171104_104159.jpg'),
+                                         PosixPath('dest/2018-07'),
+                                         PosixPath('dest/2018-07/VID_20180724_173611.mp4'),
+                                         PosixPath('dest/2018-10'),
+                                         PosixPath('dest/2018-10/IMG_20181001_124203.gif')])
 
         result = sorting_pictures.search_directory(src)
         result = [p.relative_to(tmp_path) for p in result]
@@ -358,8 +370,7 @@ class TestSortImages:
                                          PosixPath('src/no-m'),
                                          PosixPath('src/no-metadata.jpg'),
                                          PosixPath('src/metadata.jpg'),
-                                         PosixPath('src/no-metadata'),
-                                         PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')])
+                                         PosixPath('src/no-metadata'), ])
 
         log = sorting_pictures.log
         log['parse'] = [p.relative_to(tmp_path) for p in log['parse']]
@@ -370,8 +381,7 @@ class TestSortImages:
                     'parse': [PosixPath('src/metadata-copy.jpg'),
                               PosixPath('src/IMG_NO_PARSE.jpg'),
                               PosixPath('src/no-metadata.jpg'),
-                              PosixPath('src/metadata.jpg'),
-                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                              PosixPath('src/metadata.jpg'), ],
                     'suffix': [PosixPath('src/VID'),
                                PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 
@@ -431,8 +441,7 @@ class TestSortImages:
                     'parse': [PosixPath('src/metadata-copy.jpg'),
                               PosixPath('src/IMG_NO_PARSE.jpg'),
                               PosixPath('src/no-metadata.jpg'),
-                              PosixPath('src/metadata.jpg'),
-                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                              PosixPath('src/metadata.jpg'), ],
                     'suffix': [PosixPath('src/VID'),
                                PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 
@@ -469,8 +478,7 @@ class TestSortImages:
                     'parse': [PosixPath('src/metadata-copy.jpg'),
                               PosixPath('src/IMG_NO_PARSE.jpg'),
                               PosixPath('src/no-metadata.jpg'),
-                              PosixPath('src/metadata.jpg'),
-                              PosixPath('src/no-metadata/20170112_110943-ANIMATION.gif')],
+                              PosixPath('src/metadata.jpg'), ],
                     'suffix': [PosixPath('src/VID'),
                                PosixPath('src/IMG_20171022_124203.unknown_suffix')]}
 

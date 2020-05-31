@@ -1,6 +1,7 @@
 """Sort photos from the source directory into the destination directory."""
 import argparse
 import hashlib
+import re
 import shutil
 import sys
 from datetime import datetime
@@ -10,6 +11,9 @@ from tqdm import tqdm
 
 
 class SortingPictures:
+    date_replace = re.compile(r'[-~]')
+    date_pattern = re.compile(r'(\d{8}_\d{6})')
+
     def __init__(self):
         self.log = dict()
         for key in 'parse suffix collisions'.split():
@@ -37,22 +41,20 @@ class SortingPictures:
 
         return parser
 
-    @staticmethod
-    def get_date_from_filename(filename):
+    @classmethod
+    def get_date_from_filename(cls, filename):
         """Derive the images timestamp from the filename.
 
         :param filename: Filename of the image file.
         :return: datetime.datetime
         """
-
-        f = Path(filename).stem
-        f = f.replace('~', '_')
-        f = f.replace('-', '_')
-        f = f.split('_')[1:3]
-        f = ''.join(f)
+        f = cls.date_replace.sub('_', str(filename))
+        match = cls.date_pattern.search(f)
+        if match is None:
+            return None
 
         try:
-            return datetime.strptime(f, '%Y%m%d%H%M%S')
+            return datetime.strptime(match.group(0), '%Y%m%d_%H%M%S')
         except ValueError:
             return None
 

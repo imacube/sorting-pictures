@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `sort_images` first checks if the source image is a directory and skips it if true.
 - Suffix checked before the filename is parsed for a datetime stamp.
+- Change datetime stamp parsing to be more robust.
 
 ### Fixed
 - Collisions not being populated.
