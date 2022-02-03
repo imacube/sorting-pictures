@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Sort photos from the source directory into the destination directory."""
 import argparse
 import hashlib
