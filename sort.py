@@ -215,7 +215,7 @@ class SortingPictures:
         dest_path = Path(args.paths[-1])
 
         for src_path in [Path(p) for p in args.paths[:-1]]:
-            self.sort_images(src_path, dest_path, move=args.move, dry_run=args.dry_run)
+            self.sort_images(src_path, dest_path, move=args.move, dryrun=args.dryrun)
 
         if args.collisions:
             for s, d in self.log['collisions']:

@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.11.0] - 2020-05-31
+### Changed
+- `--dryrun` replaced with `--run`. The script now defaults to a dry run mode and requires the `--run` argument to
+  actually take action on files.
+
+## [0.10.0] - 2020-05-31
 ### Added
 - Test for `--collisions`, `--suffix`, and `--parase` used at the same time.
 - Added `--dryrun`.
