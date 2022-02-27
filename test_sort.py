@@ -17,7 +17,7 @@ def sorting_pictures():
 
 @pytest.fixture
 def namespace():
-    return Namespace(move=False, collisions=False, suffix=False, parse=False, dryrun=False, paths='src dest'.split())
+    return Namespace(move=False, collisions=False, suffix=False, parse=False, dry_run=False, paths='src dest'.split())
 
 
 class TestParseArguments:
@@ -36,7 +36,7 @@ class TestParseArguments:
         parser = sorting_pictures.parse_arguments()
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
         namespace.paths = 'src0 src1 src2 src3 dest'.split()
-        assert args == Namespace(move=False, collisions=False, suffix=False, parse=False, dryrun=False,
+        assert args == Namespace(move=False, collisions=False, suffix=False, parse=False, dry_run=False,
                                  paths=['src0', 'src1', 'src2', 'src3', 'dest'])
 
     def test_collisions(self, sorting_pictures, namespace):
@@ -51,10 +51,15 @@ class TestParseArguments:
         namespace.suffix = True
         assert args == namespace
 
-    def test_dryrun(self, sorting_pictures, namespace):
+    def test_dry_run(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--dryrun src dest'.split())
-        namespace.dryrun = True
+        args = parser.parse_args('--dry-run src dest'.split())
+        namespace.dry_run = True
+        assert args == namespace
+
+        parser = sorting_pictures.parse_arguments()
+        args = parser.parse_args('--dry-run src dest'.split())
+        namespace.dry_run = True
         assert args == namespace
 
 
@@ -99,6 +104,13 @@ class TestGetDateFromFile:
 
         assert actual == expected
 
+    def test_image_metadata(self, sorting_pictures):
+        actual = sorting_pictures.get_date_from_exif(Path('sample-images/metadata.jpg'))
+
+        expected = datetime(year=2022, month=2, day=27, hour=12, minute=9, second=35)
+
+        assert actual == expected
+
 
 class TestIsFile:
     def test_file(self, sorting_pictures):
@@ -119,26 +131,30 @@ class TestSearchDirectory:
     def test_dir(self, sorting_pictures):
         result = sorting_pictures.search_directory('sample-images')
 
-        assert sorted(result) == sorted([PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
-                                         PosixPath('sample-images/IMG_20171022_124203.unknown_suffix'),
-                                         PosixPath('sample-images/IMG_NO_PARSE.jpg'),
-                                         PosixPath('sample-images/VID'),
-                                         PosixPath('sample-images/metadata-copy.jpg'),
-                                         PosixPath('sample-images/metadata.jpg'),
-                                         PosixPath('sample-images/no-m'),
-                                         PosixPath('sample-images/no-metadata'),
-                                         PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
-                                         PosixPath('sample-images/no-metadata/20171022_010203.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20171104_104158~.jpg'),
-                                         PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif'),
-                                         PosixPath('sample-images/no-metadata/IMG~20171104~104159~.jpg'),
-                                         PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
-                                         PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
-                                         PosixPath('sample-images/no-metadata.jpg')])
+        assert sorted(result) == sorted(
+            [
+                PosixPath('sample-images/IMG_20171022_010203_01.jpg'),
+                PosixPath('sample-images/IMG_20171022_124203.unknown_suffix'),
+                PosixPath('sample-images/IMG_NO_PARSE.jpg'),
+                PosixPath('sample-images/VID'),
+                PosixPath('sample-images/metadata-copy.jpg'),
+                PosixPath('sample-images/metadata.jpg'),
+                PosixPath('sample-images/no-m'),
+                PosixPath('sample-images/no-metadata'),
+                PosixPath('sample-images/no-metadata/20170112_110943-ANIMATION.gif'),
+                PosixPath('sample-images/no-metadata/20171022_010203.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20171022_124203.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20171022_124203_01.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20171104_104157.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20171104_104157_01.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20171104_104158~.jpg'),
+                PosixPath('sample-images/no-metadata/IMG_20181001_124203.gif'),
+                PosixPath('sample-images/no-metadata/IMG~20171104~104159~.jpg'),
+                PosixPath('sample-images/no-metadata/Screenshot_20171007-143321.png'),
+                PosixPath('sample-images/no-metadata/VID_20180724_173611.mp4'),
+                PosixPath('sample-images/no-metadata.jpg')
+            ]
+        )
 
 
 class TestDiffFiles:
@@ -413,7 +429,7 @@ class TestSortImages:
         assert log == {'parse': [], 'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
                        'collisions': []}
 
-    def test_run_copy_dryrun(self, sorting_pictures, tmp_path):
+    def test_run_copy_dry_run(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -424,7 +440,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, dryrun=True)
+        sorting_pictures.sort_images(src, dest, dry_run=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -450,7 +466,7 @@ class TestSortImages:
 
         assert log == expected
 
-    def test_run_move_dryrun(self, sorting_pictures, tmp_path):
+    def test_run_move_dry_run(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -461,7 +477,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, move=True, dryrun=True)
+        sorting_pictures.sort_images(src, dest, move=True, dry_run=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -495,16 +511,16 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dryrun=False)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dry_run=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_basic_dryrun(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
-        namespace.dryrun = True
+    def test_basic_dry_run(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.dry_run = True
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dryrun=True)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False, dry_run=True)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -513,7 +529,7 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True, dryrun=False)
+        mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True, dry_run=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -522,9 +538,10 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=False, dryrun=False),
-                                                   call(PosixPath('src1'), PosixPath('dest'), move=False, dryrun=False),
-                                                   call(PosixPath('src2'), PosixPath('dest'), move=False, dryrun=False)]
+        assert mock_sort_images.call_args_list == [
+            call(PosixPath('src0'), PosixPath('dest'), move=False, dry_run=False),
+            call(PosixPath('src1'), PosixPath('dest'), move=False, dry_run=False),
+            call(PosixPath('src2'), PosixPath('dest'), move=False, dry_run=False)]
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -534,9 +551,9 @@ class TestMain:
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
-        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True, dryrun=False),
-                                                   call(PosixPath('src1'), PosixPath('dest'), move=True, dryrun=False),
-                                                   call(PosixPath('src2'), PosixPath('dest'), move=True, dryrun=False)]
+        assert mock_sort_images.call_args_list == [call(PosixPath('src0'), PosixPath('dest'), move=True, dry_run=False),
+                                                   call(PosixPath('src1'), PosixPath('dest'), move=True, dry_run=False),
+                                                   call(PosixPath('src2'), PosixPath('dest'), move=True, dry_run=False)]
 
     @patch('sys.exit')
     @patch('sort.SortingPictures.parse_arguments')
