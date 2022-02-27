@@ -3,6 +3,7 @@
 """Sort photos from the source directory into the destination directory."""
 import argparse
 import hashlib
+import json
 import re
 import shutil
 import sys
@@ -19,7 +20,7 @@ class SortingPictures:
 
     def __init__(self):
         self.log = dict()
-        for key in 'parse suffix collisions'.split():
+        for key in 'parse suffix collisions exif google_json_date'.split():
             self.log[key] = list()
 
         self.ignore = set('.DS_Store .thumbnails'.split())
@@ -29,7 +30,8 @@ class SortingPictures:
         """Parse command line arguments."""
 
         parser = argparse.ArgumentParser(
-            description="""Sort image files based on filename timestamp into year-month folders.""")
+            description="""Sort image files based on filename timestamp into year-month folders.
+            Do not use --exif and --google-json together!""")
         parser.add_argument('--move', action='store_true', required=False, default=False,
                             help="Move files instead of copying them (default action is to copy).")
         parser.add_argument('--collisions', action='store_true', required=False, default=False,
@@ -38,11 +40,33 @@ class SortingPictures:
                             help='Print out source files with unknown suffixes (extension).')
         parser.add_argument('--parse', action='store_true', required=False, default=False,
                             help='Print out source files with filenames that could not be parsed.')
+        parser.add_argument('--exif', action='store_true', required=False, default=False,
+                            help='Look for EXIF datetime stamps in files. DO NOT USE WITH --google-json!')
+        parser.add_argument('--google-json', action='store_true', required=False, default=False,
+                            help='Use Google JSON files that contain information on individual image files to get datetime stamp. DO NOT USE WITH --exif!')
         parser.add_argument('--dry-run', action='store_true', required=False, default=False,
                             help='Do not actually copy or move files.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
         return parser
+
+    @classmethod
+    def get_google_json_date(cls, filename):
+        """Extract the image creation date from Google Photos JSON file.
+
+        :param filename: Filename of the JSON file to load.
+        :return: datetime.datetime
+        """
+        with open(filename) as in_file:
+            try:
+                data = json.load(in_file)
+            except UnicodeDecodeError:
+                return None
+
+            if data['title'] != filename.name[:-5]:
+                return None
+
+            return datetime.fromtimestamp(int(data['photoTakenTime']['timestamp']))
 
     @classmethod
     def get_date_from_exif(cls, filename):
@@ -59,7 +83,6 @@ class SortingPictures:
             return datetime.strptime(timestamp, '%Y:%m:%d %H:%M:%S')
         except ValueError:
             raise
-            return None
 
     @classmethod
     def get_date_from_filename(cls, filename):
@@ -127,7 +150,7 @@ class SortingPictures:
         return src_hash.hexdigest() == dest_hash.hexdigest()
 
     def move_file(self, src_file, dest_file, move=False, dry_run=False):
-        """Move a file from the src to the dest.
+        """Move or copy a file from the src to the dest.
 
         :param src_file: Source path.
         :param dest_file: Destination path.
@@ -163,15 +186,24 @@ class SortingPictures:
 
         return True
 
-    def sort_images(self, src_path, dest_path, move=False, dry_run=False):
+    def sort_images(self, src_path, dest_path, move=False, exif=False, google_json_date=False, dry_run=False):
         """Sort files from the source path into the destination path.
 
         :param src_path: Path to read the files from.
         :param dest_path: Path to write files to.
         :param move: True to move files, False to copy them.
+        :param exif: True to look for exif data to get datetime stamp.
+        :param google_json_date: True to look for Google JSON files with image data.
         :param dry_run: If True then copy or move will be skipped.
         :return:
         """
+
+        def process_file(file_timestamp):
+            dest = dest_path / file_timestamp.strftime('%Y-%m') / (
+                        prefix + file_timestamp.strftime('%Y%m%d_%H%M%S') + src.suffix)
+
+            if not self.move_file(src, dest, move, dry_run):
+                self.log['collisions'].append((src, dest))
 
         for src in tqdm(self.search_directory(src_path)):
             if src.is_dir():
@@ -186,14 +218,27 @@ class SortingPictures:
                 continue
 
             d = self.get_date_from_filename(src.name)
-            if d is None:
-                self.log['parse'].append(src)
+            if d is not None:
+                process_file(d)
                 continue
+            else:
+                self.log['parse'].append(src)
 
-            dest = dest_path / d.strftime('%Y-%m') / (prefix + d.strftime('%Y%m%d_%H%M%S') + src.suffix)
+            if exif:
+                d = self.get_date_from_exif(src)
+                if d is not None:
+                    process_file(d)
+                    continue
+                else:
+                    self.log['exif'].append(src)
 
-            if not self.move_file(src, dest, move, dry_run):
-                self.log['collisions'].append((src, dest))
+            if google_json_date:
+                d = self.get_google_json_date(src)
+                if d is not None:
+                    process_file(d)
+                    continue
+                else:
+                    self.log['google_json_date'].append(src)
 
     def main(self):
         """Main method to be called by CLI.
@@ -212,10 +257,15 @@ class SortingPictures:
                 print('--%s must come before source and destination paths.' % str(key))
                 sys.exit(1)
 
+        if args.exif and args.google_json:
+            parser.print_help()
+            sys.exit(1)
+
         dest_path = Path(args.paths[-1])
 
         for src_path in [Path(p) for p in args.paths[:-1]]:
-            self.sort_images(src_path, dest_path, move=args.move, dry_run=args.dry_run)
+            self.sort_images(src_path, dest_path, move=args.move, exif=args.exif, google_json_date=args.google_json,
+                             dry_run=args.dry_run)
 
         if args.collisions:
             for s, d in self.log['collisions']:

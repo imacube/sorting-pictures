@@ -1,0 +1,39 @@
+{
+  "title": "a6a5e930cac831ef4e00255c51872867.jpg",
+  "description": "",
+  "imageViews": "3",
+  "creationTime": {
+    "timestamp": "1616006686",
+    "formatted": "Mar 17, 2021, 6:44:46 PM UTC"
+  },
+  "photoTakenTime": {
+    "timestamp": "1616006562",
+    "formatted": "Mar 17, 2021, 6:42:42 PM UTC"
+  },
+  "geoData": {
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "altitude": 0.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "geoDataExif": {
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "altitude": 0.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "people": [{
+    "name": "No Name"
+  }],
+  "url": "https://localhost",
+  "googlePhotosOrigin": {
+    "mobileUpload": {
+      "deviceFolder": {
+        "localFolderName": "FolderNameHere"
+      },
+      "deviceType": "ANDROID_PHONE"
+    }
+  }
+}
