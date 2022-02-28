@@ -79,14 +79,14 @@ class TestParseArguments:
 
 class TestGetGoogleJsonDate:
     def test_good_file(self, sorting_pictures):
-        actual = sorting_pictures.get_google_json_date(Path('sample-images/a6a5e930cac831ef4e00255c51872867.jpg.json'))
+        actual = sorting_pictures.get_google_json_date(Path('sample-images/a6a5e930cac831ef4e00255c51872867.jpg'))
 
         expected = datetime(year=2021, month=3, day=17, hour=11, minute=42, second=42)
 
         assert actual == expected
 
     def test_bad_file(self, sorting_pictures):
-        actual = sorting_pictures.get_google_json_date(Path('sample-images/not_image_name.jpg.json'))
+        actual = sorting_pictures.get_google_json_date(Path('sample-images/not_image_name.jpg'))
         assert actual is None
 
 

@@ -57,13 +57,18 @@ class SortingPictures:
         :param filename: Filename of the JSON file to load.
         :return: datetime.datetime
         """
-        with open(filename) as in_file:
+        json_filename = filename.parent / Path(filename.name + '.json')
+
+        if not json_filename.is_file():
+            return None
+
+        with open(json_filename) as in_file:
             try:
                 data = json.load(in_file)
             except UnicodeDecodeError:
                 return None
 
-            if data['title'] != filename.name[:-5]:
+            if data['title'] != json_filename.name[:-5]:
                 return None
 
             return datetime.fromtimestamp(int(data['photoTakenTime']['timestamp']))
