@@ -19,7 +19,7 @@ def sorting_pictures():
 def namespace():
     return Namespace(move=False, collisions=False, suffix=False, parse=False,
                      exif=False, google_json=False,
-                     dry_run=False, paths='src dest'.split())
+                     dryrun=False, paths='src dest'.split())
 
 
 class TestParseArguments:
@@ -39,7 +39,7 @@ class TestParseArguments:
         args = parser.parse_args('src0 src1 src2 src3 dest'.split())
         namespace.paths = 'src0 src1 src2 src3 dest'.split()
         assert args == Namespace(move=False, collisions=False, suffix=False, parse=False, exif=False, google_json=False,
-                                 dry_run=False, paths=['src0', 'src1', 'src2', 'src3', 'dest'])
+                                 dryrun=False, paths=['src0', 'src1', 'src2', 'src3', 'dest'])
 
     def test_collisions(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
@@ -65,15 +65,15 @@ class TestParseArguments:
         namespace.google_json = True
         assert args == namespace
 
-    def test_dry_run(self, sorting_pictures, namespace):
+    def test_dryrun(self, sorting_pictures, namespace):
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--dry-run src dest'.split())
-        namespace.dry_run = True
+        args = parser.parse_args('--dryrun src dest'.split())
+        namespace.dryrun = True
         assert args == namespace
 
         parser = sorting_pictures.parse_arguments()
-        args = parser.parse_args('--dry-run src dest'.split())
-        namespace.dry_run = True
+        args = parser.parse_args('--dryrun src dest'.split())
+        namespace.dryrun = True
         assert args == namespace
 
 
@@ -637,7 +637,7 @@ class TestSortImages:
             'suffix': [PosixPath('src/IMG_20170102_030405.UNKNOWN_FOOBAR')],
             'collisions': []}
 
-    def test_run_copy_dry_run(self, sorting_pictures, tmp_path):
+    def test_run_copy_dryrun(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -648,7 +648,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, dry_run=True)
+        sorting_pictures.sort_images(src, dest, dryrun=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -681,7 +681,7 @@ class TestSortImages:
 
         assert log == expected
 
-    def test_run_move_dry_run(self, sorting_pictures, tmp_path):
+    def test_run_move_dryrun(self, sorting_pictures, tmp_path):
         src = tmp_path / 'src'
         dest = tmp_path / 'dest'
 
@@ -692,7 +692,7 @@ class TestSortImages:
 
         shutil.copytree('sample-images', src, symlinks=True)
 
-        sorting_pictures.sort_images(src, dest, move=True, dry_run=True)
+        sorting_pictures.sort_images(src, dest, move=True, dryrun=True)
 
         result = sorting_pictures.search_directory(dest)
         result = [p.relative_to(tmp_path) for p in result]
@@ -734,7 +734,7 @@ class TestMain:
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False,
-                                            exif=False, google_json_date=False, dry_run=False)
+                                            exif=False, google_json_date=False, dryrun=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -744,7 +744,7 @@ class TestMain:
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False,
-                                            exif=True, google_json_date=False, dry_run=False)
+                                            exif=True, google_json_date=False, dryrun=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -754,7 +754,7 @@ class TestMain:
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False,
-                                            exif=False, google_json_date=True, dry_run=False)
+                                            exif=False, google_json_date=True, dryrun=False)
 
     @patch('sys.exit')
     @patch('sort.SortingPictures.parse_arguments')
@@ -767,13 +767,13 @@ class TestMain:
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
-    def test_basic_dry_run(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
-        namespace.dry_run = True
+    def test_basic_dryrun(self, mock_parser, mock_sort_images, sorting_pictures, namespace):
+        namespace.dryrun = True
         mock_parser.return_value.parse_args.return_value = namespace
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=False,
-                                            exif=False, google_json_date=False, dry_run=True)
+                                            exif=False, google_json_date=False, dryrun=True)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -783,7 +783,7 @@ class TestMain:
         sorting_pictures.main()
 
         mock_sort_images.assert_called_with(PosixPath('src'), PosixPath('dest'), move=True,
-                                            exif=False, google_json_date=False, dry_run=False)
+                                            exif=False, google_json_date=False, dryrun=False)
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -793,9 +793,9 @@ class TestMain:
         sorting_pictures.main()
 
         assert mock_sort_images.call_args_list == [
-            call(PosixPath('src0'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dry_run=False),
-            call(PosixPath('src1'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dry_run=False),
-            call(PosixPath('src2'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dry_run=False)]
+            call(PosixPath('src0'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dryrun=False),
+            call(PosixPath('src1'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dryrun=False),
+            call(PosixPath('src2'), PosixPath('dest'), move=False, exif=False, google_json_date=False, dryrun=False)]
 
     @patch('sort.SortingPictures.sort_images')
     @patch('sort.SortingPictures.parse_arguments')
@@ -806,9 +806,9 @@ class TestMain:
         sorting_pictures.main()
 
         assert mock_sort_images.call_args_list == [
-            call(PosixPath('src0'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dry_run=False),
-            call(PosixPath('src1'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dry_run=False),
-            call(PosixPath('src2'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dry_run=False),
+            call(PosixPath('src0'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dryrun=False),
+            call(PosixPath('src1'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dryrun=False),
+            call(PosixPath('src2'), PosixPath('dest'), move=True, exif=False, google_json_date=False, dryrun=False),
         ]
 
     @patch('sys.exit')

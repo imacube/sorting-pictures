@@ -9,6 +9,7 @@ import shutil
 import sys
 from datetime import datetime
 from PIL import Image
+from PIL import UnidentifiedImageError
 from pathlib import Path
 
 from tqdm import tqdm
@@ -44,7 +45,7 @@ class SortingPictures:
                             help='Look for EXIF datetime stamps in files. DO NOT USE WITH --google-json!')
         parser.add_argument('--google-json', action='store_true', required=False, default=False,
                             help='Use Google JSON files that contain information on individual image files to get datetime stamp. DO NOT USE WITH --exif!')
-        parser.add_argument('--dry-run', action='store_true', required=False, default=False,
+        parser.add_argument('--dryrun', action='store_true', required=False, default=False,
                             help='Do not actually copy or move files.')
         parser.add_argument('paths', nargs=argparse.REMAINDER, help='source source source ... destination')
 
@@ -80,7 +81,10 @@ class SortingPictures:
         :param filename: Filename of the image file.
         :return: datetime.datetime
         """
-        exif = Image.open(filename).getexif()
+        try:
+            exif = Image.open(filename).getexif()
+        except UnidentifiedImageError:
+            return None
         timestamp = exif.get(306)
         if timestamp is None:
             return None
@@ -154,13 +158,13 @@ class SortingPictures:
 
         return src_hash.hexdigest() == dest_hash.hexdigest()
 
-    def move_file(self, src_file, dest_file, move=False, dry_run=False):
+    def move_file(self, src_file, dest_file, move=False, dryrun=False):
         """Move or copy a file from the src to the dest.
 
         :param src_file: Source path.
         :param dest_file: Destination path.
         :param move: True to move files, False to copy them.
-        :param dry_run: If True then files will not be copied or moved.
+        :param dryrun: If True then files will not be copied or moved.
         :return: None
         """
 
@@ -172,7 +176,7 @@ class SortingPictures:
         if dest.exists():
             if not self.is_file(dest):
                 return False
-            elif not dry_run:
+            elif not dryrun:
                 index = 1
                 stem = dest.stem
                 suffix = dest.suffix
@@ -180,7 +184,7 @@ class SortingPictures:
                     dest = dest.parent / ('%s-%d%s' % (stem, index, suffix))
                     index += 1
 
-        if dry_run:
+        if dryrun:
             return True
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -191,7 +195,7 @@ class SortingPictures:
 
         return True
 
-    def sort_images(self, src_path, dest_path, move=False, exif=False, google_json_date=False, dry_run=False):
+    def sort_images(self, src_path, dest_path, move=False, exif=False, google_json_date=False, dryrun=False):
         """Sort files from the source path into the destination path.
 
         :param src_path: Path to read the files from.
@@ -199,7 +203,7 @@ class SortingPictures:
         :param move: True to move files, False to copy them.
         :param exif: True to look for exif data to get datetime stamp.
         :param google_json_date: True to look for Google JSON files with image data.
-        :param dry_run: If True then copy or move will be skipped.
+        :param dryrun: If True then copy or move will be skipped.
         :return:
         """
 
@@ -207,7 +211,7 @@ class SortingPictures:
             dest = dest_path / file_timestamp.strftime('%Y-%m') / (
                         prefix + file_timestamp.strftime('%Y%m%d_%H%M%S') + src.suffix)
 
-            if not self.move_file(src, dest, move, dry_run):
+            if not self.move_file(src, dest, move, dryrun):
                 self.log['collisions'].append((src, dest))
 
         for src in tqdm(self.search_directory(src_path)):
@@ -270,7 +274,7 @@ class SortingPictures:
 
         for src_path in [Path(p) for p in args.paths[:-1]]:
             self.sort_images(src_path, dest_path, move=args.move, exif=args.exif, google_json_date=args.google_json,
-                             dry_run=args.dry_run)
+                             dryrun=args.dryrun)
 
         if args.collisions:
             for s, d in self.log['collisions']:

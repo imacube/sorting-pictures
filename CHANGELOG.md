@@ -5,14 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.0] - 2022-10-10
 ### Added
 - exif metadata parsing.
 - Google JSON files with image metadata from Google Takeout can now be parsed.
 - `README.md` examples for the new `--exif` and `--google-json` options.
 
 ### Changed
-- `--dry-run` is the new dry run option. By default the script will run, no `--run` required.
+- By default the script will run, no `--run` required.
 - `README.md` examples.
+
+### Fixed
+- Handle UnidentifiedImageError exceptions when using `--exif` option
 
 ## [0.11.0] - 2020-05-31
 ### Changed
