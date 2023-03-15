@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added output of total files that would have been processed
+- Added alternate xmp parsing to seek alternate exif timestamp
+- Added `.dng`, `.nef`, `.xmp` file extensions
+- Print files that exif couldn't be parssed out of when using `--exif`
+- Print `--google-json` argument prints out files it coulnd't process
 
 ## [1.0.0] - 2022-10-10
 ### Added

@@ -21,7 +21,7 @@ class SortingPictures:
 
     def __init__(self):
         self.log = dict()
-        for key in 'parse suffix collisions exif google_json_date'.split():
+        for key in 'parse suffix collisions exif google_json_date processed'.split():
             self.log[key] = list()
 
         self.ignore = set('.DS_Store .thumbnails'.split())
@@ -92,6 +92,31 @@ class SortingPictures:
             return datetime.strptime(timestamp, '%Y:%m:%d %H:%M:%S')
         except ValueError:
             raise
+    
+    @classmethod
+    def get_date_from_xmp(cls, filename):
+        """Get the timestamp from the file's exif xmp data.
+
+        :param filename: Filename of the image file.
+        :return: datetime.datetime
+        """
+        try:
+            with Image.open(filename) as img:
+                if not hasattr(img, 'applist'):
+                    return None
+                for segment, content in img.applist:
+                    marker, body = content.split(b'\x00', 1)
+                    if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
+                        body = body.decode('utf-8')
+                        pattern = re.compile('exif:DateTimeOriginal="(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2})')
+                        timestamp = pattern.search(body)
+                        if timestamp is None:
+                            continue
+                        timestamp = timestamp.group(1)
+                        return datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S%z')
+        except UnidentifiedImageError:
+            pass
+        return None
 
     @classmethod
     def get_date_from_filename(cls, filename):
@@ -185,6 +210,7 @@ class SortingPictures:
                     index += 1
 
         if dryrun:
+            self.log['processed'].append(src) 
             return True
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -218,7 +244,7 @@ class SortingPictures:
             if src.is_dir():
                 continue
 
-            if src.suffix.lower() in {'.jpg', '.jpeg', '.gif', '.png'}:
+            if src.suffix.lower() in {'.dng', '.jpg', '.jpeg', '.gif', '.png', '.nef', '.xmp'}:
                 prefix = 'IMG_'
             elif src.suffix.lower() in {'.mp4', '.mov'}:
                 prefix = 'VID_'
@@ -235,6 +261,8 @@ class SortingPictures:
 
             if exif:
                 d = self.get_date_from_exif(src)
+                if d is None:
+                    d = self.get_date_from_xmp(src)
                 if d is not None:
                     process_file(d)
                     continue
@@ -276,15 +304,24 @@ class SortingPictures:
             self.sort_images(src_path, dest_path, move=args.move, exif=args.exif, google_json_date=args.google_json,
                              dryrun=args.dryrun)
 
+        if args.dryrun:
+            print('processed', len(self.log['processed']))
+
         if args.collisions:
             for s, d in self.log['collisions']:
                 print('collisions', s, d)
+        if args.exif:
+            for s in self.log['exif']:
+                print('exif', s)
         if args.suffix:
             for s in self.log['suffix']:
                 print('suffix', s)
         if args.parse:
             for s in self.log['parse']:
                 print('parse', s)
+        if args.google_json:
+            for s in self.log['google_json_date']:
+                print('google_json_date', s)
 
 
 if __name__ == '__main__':
