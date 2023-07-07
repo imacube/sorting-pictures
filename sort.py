@@ -105,6 +105,8 @@ class SortingPictures:
                 if not hasattr(img, 'applist'):
                     return None
                 for segment, content in img.applist:
+                    if b'\x00' not in content:
+                        continue
                     marker, body = content.split(b'\x00', 1)
                     if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
                         body = body.decode('utf-8')
