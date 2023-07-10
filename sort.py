@@ -99,11 +99,7 @@ class SortingPictures:
         stdout = result.stdout.decode(encoding="utf-8")
         stderr = result.stderr.decode(encoding="utf-8")
         if result.returncode:
-            print(result)
-            print("\n\n\n\n")
-            print(stdout)
-            print(stderr)
-            sys.exit(result.returncode)
+            return None
 
         for timestamp in [
             x.strip() for x in stderr.split("\n") if "creation_time" in x
@@ -114,7 +110,11 @@ class SortingPictures:
             t = entry[1].strip()
             if "Z" in t:
                 t = t.replace("Z", "+00:00")
-            r = datetime.fromisoformat(t)
+            try:
+                r = datetime.fromisoformat(t)
+            except ValueError:
+                print(f"File {filename} with timestamp {t}")
+                continue
             return r
         return None
 
