@@ -6,11 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added support for video files that have their creation date stored in the
 - Added output of total files that would have been processed
 - Added alternate xmp parsing to seek alternate exif timestamp
 - Added `.dng`, `.nef`, `.xmp` file extensions
 - Print files that exif couldn't be parssed out of when using `--exif`
 - Print `--google-json` argument prints out files it coulnd't process
+
+### Changed
+- Altered processed list to have a src -> dest type output
+- Refactored code
+  - Replaced single quotes with double quotes for surrounding strings
+  - Long single line method calls replaced with multiline equivelant
+
+### Fixed
+- Issues with `--google-json` option
+- Added check for exepcted binary field in xmp data
 
 ## [1.0.0] - 2022-10-10
 ### Added
