@@ -334,7 +334,11 @@ class SortingPictures:
             dest = (
                 dest_path
                 / file_timestamp.strftime("%Y-%m")
-                / (prefix + file_timestamp.strftime("%Y%m%d_%H%M%S") + src.suffix)
+                / (
+                    prefix
+                    + file_timestamp.strftime("%Y%m%d_%H%M%S")
+                    + src.suffix.lower()
+                )
             )
 
             if not self.move_file(src, dest, move, dryrun):
@@ -360,13 +364,6 @@ class SortingPictures:
                 self.log["suffix"].append(src)
                 continue
 
-            d = self.get_date_from_filename(src.name)
-            if d is not None:
-                process_file(d)
-                continue
-            else:
-                self.log["parse"].append(src)
-
             if exif:
                 d = self.get_date_from_exif(src)
                 if d is None:
@@ -386,6 +383,13 @@ class SortingPictures:
                     continue
                 else:
                     self.log["google_json_date"].append(src)
+
+            d = self.get_date_from_filename(src.name)
+            if d is not None:
+                process_file(d)
+                continue
+            else:
+                self.log["parse"].append(src)
 
     def main(self):
         """Main method to be called by CLI.
